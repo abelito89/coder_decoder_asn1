@@ -4,7 +4,7 @@ import asn1tools
 import re
 
 
-def open_cdr_binary(ruta_cdr:Path) -> bytes:
+def open_cdr_binary(ruta_cdr: Path) -> bytes:
     """
     Lee un archivo CDR en modo binario y retorna su contenido en forma de bytes.
 
@@ -19,7 +19,7 @@ def open_cdr_binary(ruta_cdr:Path) -> bytes:
     return contenido
 
 
-def descomprimir_contenido_gzip(contenido:bytes) -> None:
+def descomprimir_contenido_gzip(contenido: bytes) -> bytes:
     """
     Descomprime datos comprimidos en formato gzip.
 
@@ -35,10 +35,11 @@ def descomprimir_contenido_gzip(contenido:bytes) -> None:
     """
     try:
         descomprimido_gzip = gzip.decompress(contenido)
-        print(f"Descompresion exitosa")
+        print("Descompresión exitosa")
         return descomprimido_gzip
     except Exception as e:
-        print(f"Error al descomprimir:{e}")
+        print(f"Error al descomprimir: {e}")
+        return b""  # Se retorna un bytes vacío en caso de error
 
 
 def fix_choice_optional(contenido: str) -> str:
@@ -76,11 +77,12 @@ def fix_choice_optional(contenido: str) -> str:
             str: El bloque CHOICE corregido.
         """
         bloque = match.group(1)
-        # Eliminar la palabra OPTIONAL (junto con los espacios anteriores)
+        # Elimina la palabra 'OPTIONAL' junto con los espacios anteriores
         bloque_corregido = re.sub(r'\s+OPTIONAL', '', bloque)
         return bloque_corregido
 
     return pattern.sub(reemplazar, contenido)
+
 
 def GprsHuaweiEM20_compiler(ruta_GprsHuaweiEM20: Path, descomprimido_gzip: bytes):
     """
@@ -97,15 +99,15 @@ def GprsHuaweiEM20_compiler(ruta_GprsHuaweiEM20: Path, descomprimido_gzip: bytes
       5. Imprime el mensaje decodificado.
 
     Parámetros:
-        ruta_GprsHuaweiEM20 (Path): Ruta al archivo de especificación ASN.1 
+        ruta_GprsHuaweiEM20 (Path): Ruta al archivo de especificación ASN.1
                                      (por ejemplo, "GprsHuaweiEM20.CallEventRecord").
-        descomprimido_gzip (bytes): Datos descomprimidos (mensaje en formato BER) 
+        descomprimido_gzip (bytes): Datos descomprimidos (mensaje en formato BER)
                                     obtenidos del CDR.
 
     Retorna:
         None
     """
-    # Leer el contenido completo del archivo de especificación
+    # Leer el contenido completo del archivo de especificación ASN.1
     contenido_asn1 = ruta_GprsHuaweiEM20.read_text()
     
     # Aplicar corrección únicamente a los bloques CHOICE
@@ -120,12 +122,30 @@ def GprsHuaweiEM20_compiler(ruta_GprsHuaweiEM20: Path, descomprimido_gzip: bytes
     print(decoded_message)
 
 
-ruta_local = Path(".")
-ruta_asn1 = ruta_local / "estructuras_ASN1"
-ruta_GprsHuaweiEM20 = ruta_asn1 / "GprsHuaweiEM20.CallEventRecord"
-ruta_cdr = ruta_local / "CDR/AP65_120250311-094603-00000002.dat%3A56077"
-directorio_salida = Path("CDR_txt/")
+def colector(ruta_local: Path):
+    """
+    Función que orquesta el flujo completo de procesamiento:
+      1. Define las rutas de la especificación ASN.1 y del CDR.
+      2. Lee el CDR en modo binario y lo descomprime.
+      3. Llama al compilador para corregir y decodificar la especificación ASN.1 junto
+         con el mensaje BER.
 
-contenido_binario = open_cdr_binary(ruta_cdr)
-descomprimido_gzip = descomprimir_contenido_gzip(contenido_binario)
-ruta_salida = GprsHuaweiEM20_compiler(ruta_GprsHuaweiEM20, descomprimido_gzip)
+    Parámetros:
+        ruta_local (Path): Ruta local base donde se encuentran los directorios 'CDR' y 
+                           'estructuras_ASN1'.
+
+    Retorna:
+        None
+    """
+    ruta_asn1 = ruta_local / "estructuras_ASN1"
+    ruta_GprsHuaweiEM20 = ruta_asn1 / "GprsHuaweiEM20.CallEventRecord"
+    ruta_cdr = ruta_local / "CDR/AP65_120250311-094603-00000002.dat%3A56077"
+    contenido_binario = open_cdr_binary(ruta_cdr)
+    descomprimido_gzip = descomprimir_contenido_gzip(contenido_binario)
+    GprsHuaweiEM20_compiler(ruta_GprsHuaweiEM20, descomprimido_gzip)
+
+
+ruta_local = Path(".")
+
+if __name__ == "__main__":
+    colector(ruta_local)
