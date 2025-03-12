@@ -2,6 +2,7 @@ from pathlib import Path
 import gzip
 import asn1tools
 import re
+from typing import Match
 
 
 def open_cdr_binary(ruta_cdr: Path) -> bytes:
@@ -61,7 +62,7 @@ def fix_choice_optional(contenido: str) -> str:
     # Se usa re.DOTALL para que el punto incluya saltos de línea.
     pattern = re.compile(r'(CHOICE\s*{.*?})', re.DOTALL)
     
-    def reemplazar(match):
+    def reemplazar(match: Match[str]) -> str:
         """
         Función auxiliar para procesar un bloque CHOICE.
 
