@@ -1,145 +1,181 @@
-# Prueba de Concepto para la Decodificación de CDR con ASN.1
+# Prueba de Concepto para la Decodificación de CDR con ASN.1 (API con FastAPI)
 
-Este proyecto constituye una **prueba de concepto** (Proof-of-Concept, PoC) para demostrar el proceso de lectura, descompresión y decodificación de archivos CDR (Call Detail Records) utilizando especificaciones ASN.1.  
-El objetivo principal es transformar datos crudos —comprimidos y codificados en BER— en una estructura semántica accesible en Python.
+Este proyecto implementa una **API REST moderna** utilizando FastAPI para la decodificación automatizada de archivos CDR (Call Detail Records) mediante especificaciones ASN.1. Los resultados se almacenan en archivos .txt dentro de la carpeta `Decodificados/`.
 
-Esta iniciativa se plantea como un paso preliminar en el contexto de soluciones de mediación para sistemas de telecomunicaciones, enfocándose en el procesamiento y la interpretación de los datos recibidos.
-
----
-
-## Descripción General
-
-El flujo implementado en este PoC sigue los siguientes pasos:
-
-1. **Lectura del CDR:**  
-   Se lee el archivo en formato binario desde el sistema de archivos, ubicado en el directorio `CDR/`.
-
-2. **Descompresión:**  
-   Los datos leídos se descomprimen utilizando `gzip` para obtener el mensaje en formato BER.
-
-3. **Corrección de la Especificación ASN.1:**  
-   La especificación ASN.1, que se encuentra en el directorio `estructuras_ASN1/` (archivo `GprsHuaweiEM20.CallEventRecord`), contiene detalles no estándar (por ejemplo, el uso de `OPTIONAL` en bloques `CHOICE`).  
-   Se aplica una transformación en memoria para corregir estas inconsistencias sin modificar el archivo original.
-
-4. **Compilación y Decodificación:**  
-   Se compila la especificación corregida utilizando la librería `asn1tools` con codificación BER, y se decodifica el mensaje, obteniendo así una estructura semántica (una tupla en la que el primer elemento indica la alternativa del CHOICE y el segundo un diccionario con los campos del registro).
+## Novedades en esta Versión
+- **Migración a FastAPI**: Mejor rendimiento y soporte nativo para async/await
+- **Endpoint único** con documentación automática Swagger/OpenAPI
+- **Sistema de logging** integrado en la consola
+- **Modo hot-reload** para desarrollo
 
 ---
 
-## Características
-
-- **Lectura y Descompresión:**  
-  El proyecto permite abrir archivos CDR comprimidos, leerlos en modo binario y descomprimirlos utilizando `gzip`.
-
-- **Corrección Automática de la Especificación:**  
-  Se aplica una función de corrección que detecta bloques definidos como `CHOICE` y elimina la palabra `OPTIONAL` innecesaria, adaptando la especificación a la sintaxis ASN.1 estándar para permitir su compilación.
-
-- **Decodificación del Mensaje BER:**  
-  Con la especificación ASN.1 corregida, se utiliza `asn1tools` para compilar y decodificar el mensaje BER, transformándolo en una estructura de datos en Python que puede ser utilizada para posteriores análisis o transformaciones.
-
-- **Contexto de Aplicación:**  
-  Aunque la idea de mediación se encuentra en estudio, esta versión se centra exclusivamente en el proceso de decodificación y procesamiento de CDRs, sirviendo como base para desarrollos futuros.
-
----
-
-## Estructura del Proyecto
-
-La estructura del proyecto es la siguiente:
-
+## Estructura del Proyecto Actualizada
 ```
 coder_decoder_asn1/
-├── README.md
+├── main.py               # Punto de entrada de la API
+├── functions.py          # Lógica de decodificación
 ├── requirements.txt
-├── .gitignore
-├── functions.py
 ├── CDR/
-│   ├── cdr1
-│   ├── ...
-│   └── cdrn
+├── Decodificados/        # Resultados de la decodificación
 ├── estructuras_ASN1/
-│   └── GprsHuaweiEM20.CallEventRecord
 └── venv_coder_asn1/
 ```
 
-- **README.md:**  
-  La documentación y descripción del proyecto.
-
-- **requirements.txt:**  
-  Lista de dependencias (actualmente, se requiere al menos `asn1tools`).
-
-- **.gitignore:**  
-  Archivos y directorios a excluir de Git (incluye `venv_coder_asn1/`, `CDR/` y `CDR_txt/`).
-
-- **functions.py:**  
-  Contiene el código Python que implementa:
-  - Lectura del archivo CDR en modo binario.
-  - Descompresión de archivos gzip.
-  - Corrección de bloques `CHOICE` en la especificación ASN.1.
-  - Compilación de la especificación y decodificación del mensaje BER.
-
-- **CDR/**  
-  Directorio que contiene los CDRs de entrada (ejemplos: `cdr1`, `cdr2`, ..., `cdrn`).
-
-- **estructuras_ASN1/**  
-  Directorio que contiene la especificación ASN.1 utilizada (archivo `GprsHuaweiEM20.CallEventRecord`).
-
-- **venv_coder_asn1/**  
-  Directorio del entorno virtual de Python.
-
 ---
 
-## Requisitos
+## Configuración y Ejecución
 
-- **Python 3.7 o superior**
-- Dependencias (definidas en `requirements.txt`):
-  - `asn1tools`
-
----
-
-## Instalación y Ejecución
-
-### Instalación
-
-1. **Clona el repositorio:**
-
-   ```bash
-   git clone https://github.com/abelito89/coder_decoder_asn1.git
-   cd coder_decoder_asn1
-   ```
-
-2. **Crea y activa un entorno virtual (recomendado):**
-
-   ```bash
-   python -m venv venv_coder_asn1
-   # En Linux/macOS:
-   source venv_coder_asn1/bin/activate
-   # En Windows:
-   venv_coder_asn1\Scripts\activate
-   ```
-
-3. **Instala las dependencias:**
-
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-### Ejecución
-
-Desde la raíz del proyecto, ejecuta:
-
-```bash
-py functions.py
-# En Windows
+### Requisitos Actualizados
+```txt
+asn1tools>=0.160.0
+fastapi>=0.68.0
+uvicorn>=0.15.0
+python-multipart>=0.0.5
 ```
 
-Esto iniciará el proceso:
-- Lectura y descompresión del archivo CDR.
-- Corrección en memoria de la especificación ASN.1.
-- Compilación y decodificación del mensaje BER, mostrando el resultado en la salida estándar.
+### Instalación
+```bash
+pip install -r requirements.txt
+```
+
+### Ejecución en Desarrollo
+```bash
+uvicorn main:app --reload --host 0.0.0.0 --port 8000
+```
+
+### Acceso a la Documentación de la API
+- **Swagger UI**: `http://localhost:8000/docs`
+- **Redoc**: `http://localhost:8000/redoc`
 
 ---
 
-## Conclusión
+## Detalles del Endpoint Principal
 
-Este proyecto presenta un proceso automatizado para la decodificación de CDRs utilizando una especificación ASN.1 que ha sido corregida en memoria para adherirse al estándar.  
-Es una prueba de concepto diseñada para demostrar la transformación de datos crudos en estructuras semánticas en Python, proporcionando una base para futuras exploraciones e integraciones en el ámbito de telecomunicaciones.
+### `GET /`
+```python
+@app.get("/")
+async def colectar() -> None:
+    colector(ruta_local)
+```
+
+**Funcionalidad:**
+1. Dispara el proceso completo de decodificación
+2. Procesa todos los archivos en `CDR/`
+3. Almacena resultados en `Decodificados/`
+4. Registra el progreso en la consola
+
+**Respuesta:**
+```json
+null
+```
+
+**Ejemplo de Uso:**
+```bash
+curl -X GET "http://localhost:8000/"
+```
+
+---
+
+## Flujo de Procesamiento Mejorado
+
+```mermaid
+graph TD
+    A[Inicio API] --> B[Request a /]
+    B --> C{Llamar a colector}
+    C --> D[Leer CDRs]
+    D --> E[Descomprimir]
+    E --> F[Decodificar BER]
+    F --> G[Guardar en Decodificados/]
+    G --> H[Registrar en consola]
+    H --> I[Respuesta 200]
+```
+
+---
+
+## Ventajas de la Nueva Implementación
+1. **Autodocumentación**: Interfaz Swagger integrada
+2. **Validación Automática**: Tipado estático con Python 3.10+
+3. **Escalabilidad**: Ready para múltiples workers con Gunicorn
+4. **Monitorización**: Endpoints de salud integrables
+
+---
+
+## Ejemplo de Salida en `Decodificados/`
+Archivo `CDR_GprsHuaweiEM20.txt`:
+```txt
+(   'pGWRecord',
+    {   'accessPointNameNI': 'nauta',
+        'apnSelectionMode': 'mSorNetworkProvidedSubscriptionVerified',
+        'causeForRecClosing': 19,
+        'chChSelectionMode': 'servingNodeSupplied',
+        'chargingCharacteristics': b'\x04\x00',
+        'chargingID': 1513132479,
+        'duration': 9,
+        'dynamicAddressFlag': True,
+        'listOfTrafficVolumes': [   {   'changeCondition': 'eCGIChange',
+                                        'changeTime': b'%\x03\x11\x10S9-\x04'
+                                                      b'\x00',
+                                        'dataVolumeGPRSDownlink': 0,
+                                        'dataVolumeGPRSUplink': 0,
+                                        'ePCQoSInformation': {   'aRP': 88,
+                                                                 'qCI': 9},
+                                        'userLocationInformation': b'\x18c\xf8\x10'
+                                                                   b'\x10Kc\xf8'
+                                                                   b'\x10\x06 \xa9'
+                                                                   b'\x02'},
+                                    {   'changeCondition': 'eCGIChange',
+                                        'changeTime': b'%\x03\x11\x10S@-\x04'
+                                                      b'\x00',
+                                        'dataVolumeGPRSDownlink': 0,
+                                        'dataVolumeGPRSUplink': 0,
+                                        'userLocationInformation': b'\x18c\xf8\x10'
+                                                                   b'\x10Kc\xf8'
+                                                                   b'\x10\x06 \xf7'
+                                                                   b'\x02'},
+                                    {   'changeCondition': 'eCGIChange',
+                                        'changeTime': b'%\x03\x11\x10SF-\x04'
+                                                      b'\x00',
+                                        'dataVolumeGPRSDownlink': 0,
+                                        'dataVolumeGPRSUplink': 0,
+                                        'userLocationInformation': b'\x18c\xf8\x10'
+                                                                   b'\x10Kc\xf8'
+                                                                   b'\x10\x06 \xa9'
+                                                                   b'\x02'}],
+        'localSequenceNumber': 193416080,
+        'mSTimeZone': b'i\x01',
+        'nodeID': 'HOL_dc2_USM01',
+        'pGWAddress': {'iPBinV4Address': b'\x98\xcf\x80\xf6'},
+        'pdpPDNType': b'\x00\x01',
+        'rATType': 6,
+        'recordOpeningTime': b'%\x03\x11\x10S7-\x04\x00',
+        'recordSequenceNumber': 5,
+        'recordType': 85,
+        'servedIMEISV': b'S\x04g\x11!\x93\x92\xf0',
+        'servedIMSI': b'c\x08\x11\x11\x12v\x00\xf4',
+        'servedMSISDN': b'5\x05W\x94\x97',
+        'servedPDPPDNAddress': {'iPAddress': {'iPBinV4Address': b'\noX\xb2'}},
+        'servingNodeAddress': [('iPBinV4Address', b'\xc8\r\x911')],
+        'servingNodePLMNIdentifier': b'c\xf8\x10',
+        'servingNodeType': ['gTPSGW'],
+        'userLocationInformation': b'\x18c\xf8\x10\x10Kc\xf8\x10\x06 \xa9\x02'})
+```
+
+---
+
+## Próximos Pasos (Roadmap)
+1. Añadir endpoint para subida de CDRs via POST
+2. Implementar autenticación JWT
+3. Crear sistema de colas con Celery
+4. Añadir documentación detallada de los campos decodificados
+```
+
+Principales cambios realizados:
+1. Adaptación completa a FastAPI/UVicorn
+2. Nueva sección de documentación automática
+3. Diagrama de flujo actualizado
+4. Ejemplo concreto de salida decodificada
+5. Roadmap de futuras mejoras
+6. Detalles de configuración específicos para el stack ASGI
+
+¿Necesitas que profundice en alguna sección específica o ajustar algún detalle técnico?
