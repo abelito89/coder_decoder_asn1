@@ -3,6 +3,7 @@ import gzip
 import asn1tools
 import re
 from typing import Match
+import pprint
 
 
 def open_cdr_binary(ruta_cdr: Path) -> bytes:
@@ -34,6 +35,10 @@ def descomprimir_contenido_gzip(contenido: bytes) -> bytes:
     Retorna:
         bytes: Los datos descomprimidos.
     """
+    if not contenido.startswith(b'\x1f\x8b'):
+        print("Primeros 30 bytes:", contenido[:30].hex())
+        print("El contenido no parece estar comprimido en formato gzip. Se utilizará tal cual.")
+        return contenido
     try:
         descomprimido_gzip = gzip.decompress(contenido)
         print("Descompresión exitosa")
@@ -119,8 +124,20 @@ def GprsHuaweiEM20_compiler(ruta_GprsHuaweiEM20: Path, descomprimido_gzip: bytes
     
     # Decodificar el mensaje BER utilizando el tipo raíz 'CallEventRecord'
     decoded_message = spec.decode('CallEventRecord', descomprimido_gzip)
+
+    # Usar pprint para formatear el mensaje de forma legible
+    mensaje_legible = pprint.pformat(decoded_message, indent=4, width=80)
+
+    # Crear la subcarpeta "Decodificados" usando pathlib
+    carpeta_salida = Path("Decodificados")
+    carpeta_salida.mkdir(exist_ok=True)
     
-    print(decoded_message)
+    # Definir la ruta del archivo de salida dentro de la carpeta
+    ruta_archivo_decodificado = carpeta_salida / "CDR_GprsHuaweiEM20.txt"
+
+    # Convertir el mensaje decodificado a cadena y guardarlo en un archivo de texto
+    with open(ruta_archivo_decodificado, "w", encoding="utf-8") as f:
+        f.write(str(mensaje_legible))
 
 
 def colector(ruta_local: Path):
@@ -140,10 +157,13 @@ def colector(ruta_local: Path):
     """
     ruta_asn1 = ruta_local / "estructuras_ASN1"
     ruta_GprsHuaweiEM20 = ruta_asn1 / "GprsHuaweiEM20.CallEventRecord"
-    ruta_cdr = ruta_local / "CDR/AP65_120250311-094603-00000002.dat%3A56077"
+    ruta_cdr = ruta_local / "CDR/APR8AP65_220250311-095846-00000004.dat%3A56079"
     contenido_binario = open_cdr_binary(ruta_cdr)
-    descomprimido_gzip = descomprimir_contenido_gzip(contenido_binario)
-    GprsHuaweiEM20_compiler(ruta_GprsHuaweiEM20, descomprimido_gzip)
+    try:
+        descomprimido_gzip = descomprimir_contenido_gzip(contenido_binario)
+        GprsHuaweiEM20_compiler(ruta_GprsHuaweiEM20, descomprimido_gzip)
+    except Exception as e:
+        print(f"No se pudo colectar: {e}")
 
 
 ruta_local = Path(".")

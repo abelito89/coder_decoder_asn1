@@ -1,1 +1,3 @@
 asn1tools
+fastapi
+uvicorn
